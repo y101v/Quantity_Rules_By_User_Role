@@ -225,43 +225,47 @@ function add_custom_js_script() {
     ?>
     <script>
     function showUserRoleFields(select, variationId) {
-    var selectedRoles = Array.from(select.selectedOptions).map(option => option.value);
-    var fieldsContainer = document.getElementById('user_role_fields_' + variationId);
-    if (!fieldsContainer) {
-        fieldsContainer = document.createElement('div');
-        fieldsContainer.id = 'user_role_fields_' + variationId;
-        fieldsContainer.classList.add('user-role-fields-container');
-        select.parentNode.parentNode.appendChild(fieldsContainer);
-    }
-    fieldsContainer.innerHTML = '';
+        var selectedRoles = Array.from(select.selectedOptions).map(option => option.value);
+        var fieldsContainer = document.getElementById('user_role_fields_' + variationId);
+        if (!fieldsContainer) {
+            fieldsContainer = document.createElement('div');
+            fieldsContainer.id = 'user_role_fields_' + variationId;
+            fieldsContainer.classList.add('user-role-fields-container');
+            select.parentNode.parentNode.appendChild(fieldsContainer);
+        }
+        fieldsContainer.innerHTML = '';
 
-    if (selectedRoles.length > 0) {
-        selectedRoles.forEach(function(role_name) {
-            var fieldName = role_name + '_fields_' + variationId;
-            var fieldElement = document.createElement('div');
-            fieldElement.id = fieldName;
-            fieldElement.classList.add('user-role-fields');
-            fieldsContainer.appendChild(fieldElement);
-            fieldElement.innerHTML = `
-                <h4>${role_name}</h4>
-                <div class="user-role-field">
-                    <label for="${fieldName}_min_qty">Minimum Quantity</label>
-                    <input type="number" id="${fieldName}_min_qty" name="user_role_fields[${variationId}][${role_name}][min_qty]" class="input-text" value="" step="1" min="0">
-                </div>
-                <div class="user-role-field">
-                    <label for="${fieldName}_max_qty">Maximum Quantity</label>
-                    <input type="number" id="${fieldName}_max_qty" name="user_role_fields[${variationId}][${role_name}][max_qty]" class="input-text" value="" step="1" min="0">
-                </div>
-                <div class="user-role-field">
-                    <label for="${fieldName}_group_of">Group of</label>
-                    <input type="number" id="${fieldName}_group_of" name="user_role_fields[${variationId}][${role_name}][group_of]" class="input-text" value="" step="1" min="0">
-                </div>
-            `;
-        });
-    } else {
-        fieldsContainer.style.display = 'none'; // Hide fields container if no roles are selected
+        // Hide all fields initially
+        fieldsContainer.style.display = 'none';
+
+        if (selectedRoles.length > 0) {
+            // Show fields only if user roles are selected
+            fieldsContainer.style.display = 'block';
+            
+            selectedRoles.forEach(function(role_name) {
+                var fieldName = role_name + '_fields_' + variationId;
+                var fieldElement = document.createElement('div');
+                fieldElement.id = fieldName;
+                fieldElement.classList.add('user-role-fields');
+                fieldsContainer.appendChild(fieldElement);
+                fieldElement.innerHTML = `
+                    <h4>${role_name}</h4>
+                    <div class="user-role-field">
+                        <label for="${fieldName}_min_qty">Minimum Quantity</label>
+                        <input type="number" id="${fieldName}_min_qty" name="user_role_fields[${variationId}][${role_name}][min_qty]" class="input-text" value="" step="1" min="0">
+                    </div>
+                    <div class="user-role-field">
+                        <label for="${fieldName}_max_qty">Maximum Quantity</label>
+                        <input type="number" id="${fieldName}_max_qty" name="user_role_fields[${variationId}][${role_name}][max_qty]" class="input-text" value="" step="1" min="0">
+                    </div>
+                    <div class="user-role-field">
+                        <label for="${fieldName}_group_of">Group of</label>
+                        <input type="number" id="${fieldName}_group_of" name="user_role_fields[${variationId}][${role_name}][group_of]" class="input-text" value="" step="1" min="0">
+                    </div>
+                `;
+            });
+        }
     }
-}
     </script>
     <?php
 }
@@ -282,7 +286,7 @@ function generate_variation_user_roles_select_box($loop, $variation_data, $varia
             }
         }
         echo '</select>';
-        echo '</p>';
+        echo '</p>';        
         
         // Output input fields with saved values
         echo '<div id="saved_role_values">';
@@ -316,7 +320,7 @@ function generate_variation_user_roles_select_box($loop, $variation_data, $varia
 }
 
 // Save variation user role fields data
-add_action('woocommerce_save_product_variation', 'save_variation_user_roles_data', 10, 2);
+add_action('woocommerce_save_product_variation', 'save_variation_user_roles_data', 20, 2);
 function save_variation_user_roles_data($variation_id, $i) {
     if (isset($_POST['user_roles'][$variation_id])) {
         $user_roles = $_POST['user_roles'][$variation_id];
@@ -330,6 +334,7 @@ function save_variation_user_roles_data($variation_id, $i) {
                 update_post_meta($variation_id, '_group_of_' . $role_name, $fields['group_of']);
             }
         }
+        update_post_meta($variation_id, 'min_max_rules', 'yes'); // This updates min_max_rules meta value to 'yes'
     }
 }
 
@@ -337,42 +342,57 @@ add_filter('woocommerce_available_variation', 'enforce_quantity_rules', 10, 3);
 function enforce_quantity_rules($data, $product, $variation) {
     // Check if variation is sold individually
     if ($product->is_sold_individually()) {
+        echo "Product is sold individually.\n";
         return $data;
     }
 
     $variation_id = $variation->get_id();
 
+    // Get the current user and their first role
+    $current_user = wp_get_current_user();
+    $user_role = $current_user->roles[0];
+
     // Get min-max rules for the variation
     $min_max_rules = get_post_meta($variation_id, 'min_max_rules', true);
 
     // If there are no rules or rules are disabled, return data as is
+   // Get min-max rules for the variation
+    $min_max_rules = get_post_meta($variation_id, 'min_max_rules', true);
+
+// If there are no rules or rules are disabled, return data as is
     if ($min_max_rules !== 'yes') {
-        return $data;
-    }
+    echo "Min-max rules are not enabled.\n";
+    return $data;
+}
 
     // Get variation specific min-max settings
     $user_roles = get_post_meta($variation_id, '_user_roles', true);
-    if (!empty($user_roles)) {
-        foreach ($user_roles as $role_name) {
-            $min_quantity = get_post_meta($variation_id, '_min_quantity_' . $role_name, true);
-            $max_quantity = get_post_meta($variation_id, '_max_quantity_' . $role_name, true);
-            $group_of_quantity = get_post_meta($variation_id, '_group_of_' . $role_name, true);
+    if (!empty($user_roles) && in_array($user_role, $user_roles)) {
+        $min_quantity = get_post_meta($variation_id, '_min_quantity_' . $user_role, true);
+        $max_quantity = get_post_meta($variation_id, '_max_quantity_' . $user_role, true);
+        $group_of_quantity = get_post_meta($variation_id, '_group_of_' . $user_role, true);
 
-            // Apply quantity rules
-            if ($min_quantity && isset($_REQUEST['quantity']) && intval($_REQUEST['quantity']) < $min_quantity) {
-                $data['min_qty'] = $min_quantity;
-            }
+        echo "Min quantity: $min_quantity\n";
+        echo "Max quantity: $max_quantity\n";
+        echo "Group of quantity: $group_of_quantity\n";
 
-            if ($max_quantity && isset($_REQUEST['quantity']) && intval($_REQUEST['quantity']) > $max_quantity) {
-                $data['max_qty'] = $max_quantity;
-            }
+        // Apply quantity rules
+        if ($min_quantity && isset($_REQUEST['quantity']) && intval($_REQUEST['quantity']) < $min_quantity) {
+            echo "Setting min quantity.\n";
+            $data['min_qty'] = $min_quantity;
+        }
 
-            if ($group_of_quantity && isset($_REQUEST['quantity'])) {
-                $quantity = intval($_REQUEST['quantity']);
-                $adjusted_quantity = ceil($quantity / $group_of_quantity) * $group_of_quantity;
-                if ($adjusted_quantity != $quantity) {
-                    $data['quantity'] = $adjusted_quantity;
-                }
+        if ($max_quantity && isset($_REQUEST['quantity']) && intval($_REQUEST['quantity']) > $max_quantity) {
+            echo "Setting max quantity.\n";
+            $data['max_qty'] = $max_quantity;
+        }
+
+        if ($group_of_quantity && isset($_REQUEST['quantity'])) {
+            $quantity = intval($_REQUEST['quantity']);
+            $adjusted_quantity = ceil($quantity / $group_of_quantity) * $group_of_quantity;
+            if ($adjusted_quantity != $quantity) {
+                echo "Adjusting quantity.\n";
+                $data['quantity'] = $adjusted_quantity;
             }
         }
     }
