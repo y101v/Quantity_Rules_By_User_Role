@@ -225,52 +225,51 @@ add_action('admin_footer', 'add_custom_js_script');
 function add_custom_js_script() {
     ?>
     <script>
-    function showUserRoleFields(select, variationId) {
-        var selectedRoles = Array.from(select.selectedOptions).map(option => option.value);
-        var fieldsContainer = document.getElementById('user_role_fields_' + variationId);
-        if (!fieldsContainer) {
-            fieldsContainer = document.createElement('div');
-            fieldsContainer.id = 'user_role_fields_' + variationId;
-            fieldsContainer.classList.add('user-role-fields-container');
-            select.parentNode.parentNode.appendChild(fieldsContainer);
-        }
-        fieldsContainer.innerHTML = '';
-
-        // Hide all fields initially
-        fieldsContainer.style.display = 'none';
-
-        if (selectedRoles.length > 0) {
-            // Show fields only if user roles are selected
-            fieldsContainer.style.display = 'block';
-            
-            selectedRoles.forEach(function(role_name) {
-                var fieldName = role_name + '_fields_' + variationId;
-                var fieldElement = document.createElement('div');
-                fieldElement.id = fieldName;
-                fieldElement.classList.add('user-role-fields');
-                fieldsContainer.appendChild(fieldElement);
-                fieldElement.innerHTML = `
-                    <h4>${role_name}</h4>
-                    <div class="user-role-field">
-                        <label for="${fieldName}_min_qty">Minimum Quantity</label>
-                        <input type="number" id="${fieldName}_min_qty" name="user_role_fields[${variationId}][${role_name}][min_qty]" class="input-text" value="" step="1" min="0">
-                    </div>
-                    <div class="user-role-field">
-                        <label for="${fieldName}_max_qty">Maximum Quantity</label>
-                        <input type="number" id="${fieldName}_max_qty" name="user_role_fields[${variationId}][${role_name}][max_qty]" class="input-text" value="" step="1" min="0">
-                    </div>
-                    <div class="user-role-field">
-                        <label for="${fieldName}_group_of">Group of</label>
-                        <input type="number" id="${fieldName}_group_of" name="user_role_fields[${variationId}][${role_name}][group_of]" class="input-text" value="" step="1" min="0">
-                    </div>
-                `;
-            });
-        }
+function showUserRoleFields(select, variationId) {
+    var selectedRoles = Array.from(select.selectedOptions).map(option => option.value);
+    var fieldsContainer = document.getElementById('user_role_fields_' + variationId);
+    if (!fieldsContainer) {
+        fieldsContainer = document.createElement('div');
+        fieldsContainer.id = 'user_role_fields_' + variationId;
+        fieldsContainer.classList.add('user-role-fields-container');
+        select.parentNode.parentNode.appendChild(fieldsContainer);
     }
+    fieldsContainer.innerHTML = '';
+
+    var allowedRoles = selectedRoles; // Display fields for all selected roles
+
+    if (allowedRoles.length > 0) {
+        fieldsContainer.style.display = 'block';
+
+        allowedRoles.forEach(function(role_name) {
+            var fieldName = role_name + '_fields_' + variationId;
+            var fieldElement = document.createElement('div');
+            fieldElement.id = fieldName;
+            fieldElement.classList.add('user-role-fields');
+            fieldsContainer.appendChild(fieldElement);
+            fieldElement.innerHTML = `
+                <h4>${role_name}</h4>
+                <div class="user-role-field">
+                    <label for="${fieldName}_min_qty">Minimum Quantity</label>
+                    <input type="number" id="${fieldName}_min_qty" name="user_role_fields[${variationId}][${role_name}][min_qty]" class="input-text" value="" step="1" min="0">
+                </div>
+                <div class="user-role-field">
+                    <label for="${fieldName}_max_qty">Maximum Quantity</label>
+                    <input type="number" id="${fieldName}_max_qty" name="user_role_fields[${variationId}][${role_name}][max_qty]" class="input-text" value="" step="1" min="0">
+                </div>
+                <div class="user-role-field">
+                    <label for="${fieldName}_group_of">Group of</label>
+                    <input type="number" id="${fieldName}_group_of" name="user_role_fields[${variationId}][${role_name}][group_of]" class="input-text" value="" step="1" min="0">
+                </div>
+            `;
+        });
+    } else {
+        fieldsContainer.style.display = 'none';
+    }
+}
     </script>
     <?php
 }
-
 // Add user roles select box for variations
 add_action('woocommerce_variation_options_pricing', 'generate_variation_user_roles_select_box', 10, 3);
 function generate_variation_user_roles_select_box($loop, $variation_data, $variation) {
@@ -293,26 +292,32 @@ function generate_variation_user_roles_select_box($loop, $variation_data, $varia
             </p>
             <div id="saved_role_values">
                 <?php foreach ($all_roles as $role_name => $role_info) {
-                    $min_quantity = get_post_meta($variation->ID, '_min_quantity_' . $role_name, true);
-                    $max_quantity = get_post_meta($variation->ID, '_max_quantity_' . $role_name, true);
-                    $group_of_quantity = get_post_meta($variation->ID, '_group_of_' . $role_name, true);
-                    ?>
-                    <div id="<?php echo $role_name . '_fields'; ?>">
-                        <h4><?php echo $role_info['name']; ?></h4>
-                        <div class="user-role-field">
-                            <label for="<?php echo $role_name . '_min_qty'; ?>">Minimum Quantity</label>
-                            <input type="number" id="<?php echo $role_name . '_min_qty'; ?>" name="user_role_fields[<?php echo $variation->ID; ?>][<?php echo $role_name; ?>][min_qty]" class="input-text" value="<?php echo $min_quantity; ?>" step="1" min="0">
+                    // Define the roles for which the fields should be displayed
+                    $allowedRoles = ['Administrator', 'Author', 'Subscriber', 'Customer'];
+
+                    // Check if the current role is in the allowedRoles array
+                    if (in_array($role_name, $allowedRoles)) {
+                        $min_quantity = get_post_meta($variation->ID, '_min_quantity_' . $role_name, true);
+                        $max_quantity = get_post_meta($variation->ID, '_max_quantity_' . $role_name, true);
+                        $group_of_quantity = get_post_meta($variation->ID, '_group_of_' . $role_name, true);
+                        ?>
+                        <div id="<?php echo $role_name . '_fields'; ?>">
+                            <h4><?php echo $role_info['name']; ?></h4>
+                            <div class="user-role-field">
+                                <label for="<?php echo $role_name . '_min_qty'; ?>">Minimum Quantity</label>
+                                <input type="number" id="<?php echo $role_name . '_min_qty'; ?>" name="user_role_fields[<?php echo $variation->ID; ?>][<?php echo $role_name; ?>][min_qty]" class="input-text" value="<?php echo $min_quantity; ?>" step="1" min="0">
+                            </div>
+                            <div class="user-role-field">
+                                <label for="<?php echo $role_name . '_max_qty'; ?>">Maximum Quantity</label>
+                                <input type="number" id="<?php echo $role_name . '_max_qty'; ?>" name="user_role_fields[<?php echo $variation->ID; ?>][<?php echo $role_name; ?>][max_qty]" class="input-text" value="<?php echo $max_quantity; ?>" step="1" min="0">
+                            </div>
+                            <div class="user-role-field">
+                                <label for="<?php echo $role_name . '_group_of'; ?>">Group of</label>
+                                <input type="number" id="<?php echo $role_name . '_group_of'; ?>" name="user_role_fields[<?php echo $variation->ID; ?>][<?php echo $role_name; ?>][group_of]" class="input-text" value="<?php echo $group_of_quantity; ?>" step="1" min="0">
+                            </div>
                         </div>
-                        <div class="user-role-field">
-                            <label for="<?php echo $role_name . '_max_qty'; ?>">Maximum Quantity</label>
-                            <input type="number" id="<?php echo $role_name . '_max_qty'; ?>" name="user_role_fields[<?php echo $variation->ID; ?>][<?php echo $role_name; ?>][max_qty]" class="input-text" value="<?php echo $max_quantity; ?>" step="1" min="0">
-                        </div>
-                        <div class="user-role-field">
-                            <label for="<?php echo $role_name . '_group_of'; ?>">Group of</label>
-                            <input type="number" id="<?php echo $role_name . '_group_of'; ?>" name="user_role_fields[<?php echo $variation->ID; ?>][<?php echo $role_name; ?>][group_of]" class="input-text" value="<?php echo $group_of_quantity; ?>" step="1" min="0">
-                        </div>
-                    </div>
-                    <?php
+                        <?php
+                    }
                 } ?>
             </div>
         </div>
