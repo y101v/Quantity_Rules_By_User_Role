@@ -308,7 +308,7 @@ function enforce_quantity_rules($data, $product, $variation) {
             
             // Apply quantity rules to the variation data
             $data['min_qty'] = intval($min_quantity);
-            $data['max_qty'] = intval($max_quantity);
+            $data['max_qty'] = intval($max_quantity) ? intval($max_quantity) : ''; // Set to infinite if no maximum quantity is set
             $data['step'] = intval($group_of_quantity); 
         }
     }
