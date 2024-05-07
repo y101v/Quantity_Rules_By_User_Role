@@ -23,119 +23,134 @@ function sf_child_theme_dequeue_style() {
  * Note: DO NOT! alter or remove the code above this text and only add your custom PHP functions below this text.
  */
 
-
- add_action('admin_enqueue_scripts', 'enqueue_custom_product_fields_script');
-function enqueue_custom_product_fields_script() {
-    wp_enqueue_script('custom-product-fields', get_template_directory_uri() . '/custom-product-fields.js', array('jquery'), null, true);
-}
-
-// Add JavaScript function to handle user role fields dynamically
-add_action('admin_footer', 'add_custom_js_script_for_simple_products');
-function add_custom_js_script_for_simple_products() {
-    ?>
-    <script>
-        jQuery(document).ready(function($) {
-            function showUserRoleFields() {
-                var selectedRoles = $('.user-roles-select').val();
-                var fieldsContainer = $('.user-role-fields-container');
-                fieldsContainer.empty();
-                
-                if (selectedRoles && selectedRoles.length > 0) {
-                    fieldsContainer.css('display', 'block');
-                    selectedRoles.forEach(function(role_name) {
-                        var fieldElement = `
-                            <div class="user-role-fields">
-                                <h3>${role_name}</h3>
-                                <div class="user-role-field">
-                                    <label for="${role_name}_min_qty">Minimum Quantity</label>
-                                    <input type="number" id="${role_name}_min_qty" name="${role_name}[min_qty]" class="input-text" value="" step="1" min="0">
-                                </div>
-                                <div class="user-role-field">
-                                    <label for="${role_name}_max_qty">Maximum Quantity</label>
-                                    <input type="number" id="${role_name}_max_qty" name="${role_name}[max_qty]" class="input-text" value="" step="1" min="0">
-                                </div>
-                                <div class="user-role-field">
-                                    <label for="${role_name}_group_of">Group of</label>
-                                    <input type="number" id="${role_name}_group_of" name="${role_name}[group_of]" class="input-text" value="" step="1" min="0">
-                                </div>
-                            </div>`;
-                        fieldsContainer.append(fieldElement);
-                    });
-                } else {
-                    fieldsContainer.css('display', 'none');
-                }
-            }
-            
-            // Bind the function to the change event of the select box
-            $('.user-roles-select').on('change', showUserRoleFields);
-            showUserRoleFields(); // Call the function initially
-        });
-    </script>
-    <?php
-}
-
-// Add user roles select box for simple products
-add_action('woocommerce_product_options_general_product_data', 'add_user_roles_select_box_for_simple_products');
-function add_user_roles_select_box_for_simple_products() {
-    $all_roles = get_editable_roles();
-    ?>
-    <div class="options_group">
-        <p class="form-field">
-            <label for="user_roles">User Roles</label>
-            <select multiple id="user_roles" name="user_roles[]" class="user-roles-select">
-                <?php
-                foreach ($all_roles as $role_name => $role_info) {
-                    if (isset($role_info['name']) && is_string($role_info['name'])) {
-                        ?>
-                        <option value="<?php echo $role_name; ?>"><?php echo $role_info['name']; ?></option>
-                        <?php
-                    }
-                }
-                ?>
-            </select>
-        </p>
-    </div>
-    <div class="user-role-fields-container" style="display: none;"></div>
-    <?php
-}
-
+ add_action('woocommerce_product_options_general_product_data', 'add_user_roles_select_box_for_simple_products');
+ function add_user_roles_select_box_for_simple_products() {
+     global $post;
+     $all_roles = get_editable_roles();
+     ?>
+     <div class="options_group">
+         <p class="form-field">
+             <label for="user_roles">User Roles</label>
+             <select multiple id="user_roles" name="user_roles[]" class="user-roles-select" onchange="showUserRoleFields()">
+                 <?php
+                 foreach ($all_roles as $role_name => $role_info) {
+                     if (isset($role_info['name']) && is_string($role_info['name'])) {
+                         ?>
+                         <option value="<?php echo $role_name; ?>"><?php echo $role_info['name']; ?></option>
+                         <?php
+                     }
+                 }
+                 ?>
+             </select>
+         </p>
+ 
+         <div class="user-role-fields-container">
+             <?php
+             // Loop through selected roles to display input fields
+             foreach ($all_roles as $role_name => $role_info) {
+                 ?>
+                 <div class="role-fields <?php echo $role_name; ?>">
+                     <h4><?php echo $role_info['name']; ?></h4>
+                     <p class="form-field minimum_allowed_quantity_field">
+                         <label for="minimum_allowed_quantity_<?php echo $role_name; ?>">Minimum quantity</label>
+                         <input type="number" class="short" name="minimum_allowed_quantity_<?php echo $role_name; ?>" id="minimum_allowed_quantity_<?php echo $role_name; ?>" placeholder="" min="0" step="1" value="<?php echo get_post_meta($post->ID, '_min_quantity_' . $role_name, true); ?>">
+                     </p>
+                     <p class="form-field maximum_allowed_quantity_field">
+                         <label for="maximum_allowed_quantity_<?php echo $role_name; ?>">Maximum quantity</label>
+                         <input type="number" class="short" name="maximum_allowed_quantity_<?php echo $role_name; ?>" id="maximum_allowed_quantity_<?php echo $role_name; ?>" placeholder="" min="0" step="1" value="<?php echo get_post_meta($post->ID, '_max_quantity_' . $role_name, true); ?>">
+                     </p>
+                     <p class="form-field group_of_quantity_field">
+                         <label for="group_of_quantity_<?php echo $role_name; ?>">Group of</label>
+                         <input type="number" class="short" name="group_of_quantity_<?php echo $role_name; ?>" id="group_of_quantity_<?php echo $role_name; ?>" placeholder="" min="0" step="1" value="<?php echo get_post_meta($post->ID, '_group_of_' . $role_name, true); ?>">
+                     </p>
+                 </div>
+                 <?php
+             }
+             ?>
+         </div>
+     </div>
+ 
+     <button class="button save" type="submit"><?php esc_html_e('Save', 'woocommerce'); ?></button>
+ 
+     <script>
+         function showUserRoleFields() {
+             var selectedRoles = document.getElementById('user_roles').selectedOptions;
+             var roleFieldsContainers = document.querySelectorAll('.role-fields');
+             
+             roleFieldsContainers.forEach(function(container) {
+                 container.style.display = 'none';
+             });
+ 
+             for (var i = 0; i < selectedRoles.length; i++) {
+                 var selectedRole = selectedRoles[i].value;
+                 var roleFieldsContainer = document.querySelector('.role-fields.' + selectedRole);
+                 if (roleFieldsContainer) {
+                     roleFieldsContainer.style.display = 'block';
+                 }
+             }
+         }
+     </script>
+     <?php
+ }
+ 
 // Save simple product user role fields data
 add_action('woocommerce_process_product_meta_simple', 'save_simple_product_user_roles_data');
 function save_simple_product_user_roles_data($product_id) {
     if (isset($_POST['user_roles'])) {
         $user_roles = $_POST['user_roles'];
         foreach ($user_roles as $role_name) {
-            $fields = $_POST[$role_name . '_fields'];
-            update_post_meta($product_id, '_min_quantity_' . $role_name, $fields['min_qty']);
-            update_post_meta($product_id, '_max_quantity_' . $role_name, $fields['max_qty']);
-            update_post_meta($product_id, '_group_of_' . $role_name, $fields['group_of']);
+            update_post_meta($product_id, '_min_quantity_' . $role_name, sanitize_text_field($_POST['minimum_allowed_quantity_' . $role_name]));
+            update_post_meta($product_id, '_max_quantity_' . $role_name, sanitize_text_field($_POST['maximum_allowed_quantity_' . $role_name]));
+            update_post_meta($product_id, '_group_of_' . $role_name, sanitize_text_field($_POST['group_of_quantity_' . $role_name]));
         }
     }
 }
+add_action('woocommerce_before_add_to_cart_button', 'custom_display_quantity_fields_on_single_product');
+function custom_display_quantity_fields_on_single_product() {
+    global $product;
 
-// Enforce quantity rules for simple products
-add_filter('woocommerce_available_variation', 'enforce_quantity_rules_for_simple_products', 10, 3);
-function enforce_quantity_rules_for_simple_products($data, $product, $variation) {
-    // Get current user roles
-    $user = wp_get_current_user();
-    $user_roles = $user->roles;
+    // Check if the product is simple
+    if ($product->is_type('simple')) {
+        // Get the current user
+        $user = wp_get_current_user();
+        $user_roles = $user->roles;
 
-    if (!empty($user_roles)) {
+        // Initialize variables to store minimum, maximum, and group quantity
+        $min_quantity = $max_quantity = $group_of_quantity = '';
+
+        // Loop through user roles
         foreach ($user_roles as $role_name) {
             // Get quantity rules for the role
             $min_quantity = get_post_meta($product->get_id(), '_min_quantity_' . $role_name, true);
             $max_quantity = get_post_meta($product->get_id(), '_max_quantity_' . $role_name, true);
             $group_of_quantity = get_post_meta($product->get_id(), '_group_of_' . $role_name, true);
-            
-            // Apply quantity rules to the product data
-            $data['min_qty'] = intval($min_quantity);
-            $data['max_qty'] = intval($max_quantity);
-            $data['step'] = intval($group_of_quantity); 
-        }
-    }
-    return $data;
-}
 
+            // If any of the quantities is found, break the loop
+            if ($min_quantity || $max_quantity || $group_of_quantity) {
+                break;
+            }
+        }
+
+        // Modify the add to cart button to enforce quantity rules
+        ?>
+        <script>
+            jQuery(document).ready(function($) {
+                // Find the quantity input field
+                var quantityInput = $('input[name="quantity"]');
+                
+                // Set minimum quantity
+                quantityInput.attr('min', <?php echo intval($min_quantity); ?>);
+
+                // Set maximum quantity
+                quantityInput.attr('max', <?php echo intval($max_quantity) ? intval($max_quantity) : '""'; ?>);
+
+                // Set step to group of quantity
+                quantityInput.attr('step', <?php echo intval($group_of_quantity); ?>);
+            });
+        </script>
+        <?php
+    }
+}
 
 //////////// VARIABLE PRODUCTS ////////////
 
