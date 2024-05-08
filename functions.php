@@ -23,7 +23,14 @@ function sf_child_theme_dequeue_style() {
  * Note: DO NOT! alter or remove the code above this text and only add your custom PHP functions below this text.
  */
 
- add_action('woocommerce_product_options_general_product_data', 'add_user_roles_select_box_for_simple_products');
+ add_action('admin_enqueue_scripts', 'enqueue_select2');
+ function enqueue_select2() {
+    wp_enqueue_script('select2', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js', array('jquery'), '4.0.13', true);
+    wp_enqueue_style('select2', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css', array(), '4.0.13');
+}
+
+
+add_action('woocommerce_product_options_general_product_data', 'add_user_roles_select_box_for_simple_products');
 function add_user_roles_select_box_for_simple_products() {
     global $post;
     $all_roles = get_editable_roles();
@@ -31,12 +38,14 @@ function add_user_roles_select_box_for_simple_products() {
     <div class="options_group">
         <p class="form-field">
             <label for="user_roles">User Roles</label>
-            <select multiple id="user_roles" name="user_roles[]" class="user-roles-select">
+            <select multiple id="user_roles" name="user_roles[]" class="user-roles-select" style="width: 100%;" data-placeholder="Select user roles">
                 <?php
                 foreach ($all_roles as $role_name => $role_info) {
+                    $min_quantity = get_post_meta($post->ID, '_min_quantity_' . $role_name, true);
+                    $selected = $min_quantity ? 'selected' : '';
                     if (isset($role_info['name']) && is_string($role_info['name'])) {
                         ?>
-                        <option value="<?php echo $role_name; ?>"><?php echo $role_info['name']; ?></option>
+                        <option value="<?php echo $role_name; ?>" <?php echo $selected; ?>><?php echo $role_info['name']; ?></option>
                         <?php
                     }
                 }
@@ -48,12 +57,13 @@ function add_user_roles_select_box_for_simple_products() {
             <?php
             // Loop through selected roles to display input fields
             foreach ($all_roles as $role_name => $role_info) {
+                $min_quantity = get_post_meta($post->ID, '_min_quantity_' . $role_name, true);
                 ?>
-                <div class="role-fields <?php echo $role_name; ?>">
+                <div class="role-fields <?php echo $role_name; ?>" <?php if ($min_quantity) echo 'style="display: block;"'; ?>>
                     <h4><?php echo $role_info['name']; ?></h4>
                     <p class="form-field minimum_allowed_quantity_field">
                         <label for="minimum_allowed_quantity_<?php echo $role_name; ?>">Minimum quantity</label>
-                        <input type="number" class="short" name="minimum_allowed_quantity_<?php echo $role_name; ?>" id="minimum_allowed_quantity_<?php echo $role_name; ?>" placeholder="" min="0" step="1" value="<?php echo get_post_meta($post->ID, '_min_quantity_' . $role_name, true); ?>">
+                        <input type="number" class="short" name="minimum_allowed_quantity_<?php echo $role_name; ?>" id="minimum_allowed_quantity_<?php echo $role_name; ?>" placeholder="" min="0" step="1" value="<?php echo $min_quantity; ?>">
                     </p>
                     <p class="form-field maximum_allowed_quantity_field">
                         <label for="maximum_allowed_quantity_<?php echo $role_name; ?>">Maximum quantity</label>
@@ -69,34 +79,38 @@ function add_user_roles_select_box_for_simple_products() {
             ?>
         </div>
     </div>
-    <button class="button save" type="submit"><?php esc_html_e('Save', 'woocommerce'); ?></button>
-
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-    var userRolesSelect = document.getElementById('user_roles');
-    var roleFieldsContainers = document.querySelectorAll('.role-fields');
+        jQuery(document).ready(function($) {
+            $('#user_roles').select2();
 
-    // Hide role fields initially
-    roleFieldsContainers.forEach(function(container) {
-        container.style.display = 'none';
-    });
+            var userRolesSelect = $('#user_roles');
+            var roleFieldsContainers = $('.role-fields');
 
-    userRolesSelect.addEventListener('change', function() {
-        var selectedRoles = this.selectedOptions;
+            // Hide role fields initially
+            roleFieldsContainers.hide();
 
-        roleFieldsContainers.forEach(function(container) {
-            container.style.display = 'none';
+            // Check for roles with minimum quantity and show their input fields
+            roleFieldsContainers.each(function() {
+                if ($(this).find('.minimum_allowed_quantity_field input').val() !== '') {
+                    $(this).show();
+                }
+            });
+
+            userRolesSelect.on('change', function() {
+                var selectedRoles = $(this).val();
+
+                roleFieldsContainers.hide();
+
+                if (selectedRoles) {
+                    selectedRoles.forEach(function(selectedRole) {
+                        var roleFieldsContainer = $('.role-fields.' + selectedRole);
+                        if (roleFieldsContainer) {
+                            roleFieldsContainer.show();
+                        }
+                    });
+                }
+            });
         });
-
-        for (var i = 0; i < selectedRoles.length; i++) {
-            var selectedRole = selectedRoles[i].value;
-            var roleFieldsContainer = document.querySelector('.role-fields.' + selectedRole);
-            if (roleFieldsContainer) {
-                roleFieldsContainer.style.display = 'block';
-            }
-        }
-    });
-});
     </script>
     <?php
 }
@@ -234,13 +248,13 @@ function showUserRoleFields(select, variationId) {
             `;
         }
     });
-    
     // Display or hide the container based on selected roles
     fieldsContainer.style.display = select.selectedOptions.length > 0 ? 'block' : 'none';
 }
     </script>
     <?php
 }
+
 add_action('woocommerce_variation_options_pricing', 'generate_variation_user_roles_select_box', 10, 3);
 function generate_variation_user_roles_select_box($loop, $variation_data, $variation) {
     $all_roles = get_editable_roles();
@@ -269,6 +283,11 @@ function generate_variation_user_roles_select_box($loop, $variation_data, $varia
             </p>
             <div id="user_role_fields_<?php echo $variation->ID; ?>" class="user-role-fields-container"></div>
         </div>
+        <script>
+            jQuery(document).ready(function($) {
+                $('#user_roles_<?php echo $variation->ID; ?>').select2();
+            });
+        </script>
         <?php
     } else {
         echo 'No user roles found.';

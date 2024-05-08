@@ -1,0 +1,6 @@
+save --- gravar preços etc. como update
+produto variavel --- abrir vários select box
+
+select 2 multiselect
+
+abrir automaticamente os que tem min. quantidade definido
