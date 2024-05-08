@@ -24,74 +24,83 @@ function sf_child_theme_dequeue_style() {
  */
 
  add_action('woocommerce_product_options_general_product_data', 'add_user_roles_select_box_for_simple_products');
- function add_user_roles_select_box_for_simple_products() {
-     global $post;
-     $all_roles = get_editable_roles();
-     ?>
-     <div class="options_group">
-         <p class="form-field">
-             <label for="user_roles">User Roles</label>
-             <select multiple id="user_roles" name="user_roles[]" class="user-roles-select" onchange="showUserRoleFields()">
-                 <?php
-                 foreach ($all_roles as $role_name => $role_info) {
-                     if (isset($role_info['name']) && is_string($role_info['name'])) {
-                         ?>
-                         <option value="<?php echo $role_name; ?>"><?php echo $role_info['name']; ?></option>
-                         <?php
-                     }
-                 }
-                 ?>
-             </select>
-         </p>
- 
-         <div class="user-role-fields-container">
-             <?php
-             // Loop through selected roles to display input fields
-             foreach ($all_roles as $role_name => $role_info) {
-                 ?>
-                 <div class="role-fields <?php echo $role_name; ?>">
-                     <h4><?php echo $role_info['name']; ?></h4>
-                     <p class="form-field minimum_allowed_quantity_field">
-                         <label for="minimum_allowed_quantity_<?php echo $role_name; ?>">Minimum quantity</label>
-                         <input type="number" class="short" name="minimum_allowed_quantity_<?php echo $role_name; ?>" id="minimum_allowed_quantity_<?php echo $role_name; ?>" placeholder="" min="0" step="1" value="<?php echo get_post_meta($post->ID, '_min_quantity_' . $role_name, true); ?>">
-                     </p>
-                     <p class="form-field maximum_allowed_quantity_field">
-                         <label for="maximum_allowed_quantity_<?php echo $role_name; ?>">Maximum quantity</label>
-                         <input type="number" class="short" name="maximum_allowed_quantity_<?php echo $role_name; ?>" id="maximum_allowed_quantity_<?php echo $role_name; ?>" placeholder="" min="0" step="1" value="<?php echo get_post_meta($post->ID, '_max_quantity_' . $role_name, true); ?>">
-                     </p>
-                     <p class="form-field group_of_quantity_field">
-                         <label for="group_of_quantity_<?php echo $role_name; ?>">Group of</label>
-                         <input type="number" class="short" name="group_of_quantity_<?php echo $role_name; ?>" id="group_of_quantity_<?php echo $role_name; ?>" placeholder="" min="0" step="1" value="<?php echo get_post_meta($post->ID, '_group_of_' . $role_name, true); ?>">
-                     </p>
-                 </div>
-                 <?php
-             }
-             ?>
-         </div>
-     </div>
- 
-     <button class="button save" type="submit"><?php esc_html_e('Save', 'woocommerce'); ?></button>
- 
-     <script>
-         function showUserRoleFields() {
-             var selectedRoles = document.getElementById('user_roles').selectedOptions;
-             var roleFieldsContainers = document.querySelectorAll('.role-fields');
-             
-             roleFieldsContainers.forEach(function(container) {
-                 container.style.display = 'none';
-             });
- 
-             for (var i = 0; i < selectedRoles.length; i++) {
-                 var selectedRole = selectedRoles[i].value;
-                 var roleFieldsContainer = document.querySelector('.role-fields.' + selectedRole);
-                 if (roleFieldsContainer) {
-                     roleFieldsContainer.style.display = 'block';
-                 }
-             }
-         }
-     </script>
-     <?php
- }
+function add_user_roles_select_box_for_simple_products() {
+    global $post;
+    $all_roles = get_editable_roles();
+    ?>
+    <div class="options_group">
+        <p class="form-field">
+            <label for="user_roles">User Roles</label>
+            <select multiple id="user_roles" name="user_roles[]" class="user-roles-select">
+                <?php
+                foreach ($all_roles as $role_name => $role_info) {
+                    if (isset($role_info['name']) && is_string($role_info['name'])) {
+                        ?>
+                        <option value="<?php echo $role_name; ?>"><?php echo $role_info['name']; ?></option>
+                        <?php
+                    }
+                }
+                ?>
+            </select>
+        </p>
+
+        <div class="user-role-fields-container">
+            <?php
+            // Loop through selected roles to display input fields
+            foreach ($all_roles as $role_name => $role_info) {
+                ?>
+                <div class="role-fields <?php echo $role_name; ?>">
+                    <h4><?php echo $role_info['name']; ?></h4>
+                    <p class="form-field minimum_allowed_quantity_field">
+                        <label for="minimum_allowed_quantity_<?php echo $role_name; ?>">Minimum quantity</label>
+                        <input type="number" class="short" name="minimum_allowed_quantity_<?php echo $role_name; ?>" id="minimum_allowed_quantity_<?php echo $role_name; ?>" placeholder="" min="0" step="1" value="<?php echo get_post_meta($post->ID, '_min_quantity_' . $role_name, true); ?>">
+                    </p>
+                    <p class="form-field maximum_allowed_quantity_field">
+                        <label for="maximum_allowed_quantity_<?php echo $role_name; ?>">Maximum quantity</label>
+                        <input type="number" class="short" name="maximum_allowed_quantity_<?php echo $role_name; ?>" id="maximum_allowed_quantity_<?php echo $role_name; ?>" placeholder="" min="0" step="1" value="<?php echo get_post_meta($post->ID, '_max_quantity_' . $role_name, true); ?>">
+                    </p>
+                    <p class="form-field group_of_quantity_field">
+                        <label for="group_of_quantity_<?php echo $role_name; ?>">Group of</label>
+                        <input type="number" class="short" name="group_of_quantity_<?php echo $role_name; ?>" id="group_of_quantity_<?php echo $role_name; ?>" placeholder="" min="0" step="1" value="<?php echo get_post_meta($post->ID, '_group_of_' . $role_name, true); ?>">
+                    </p>
+                </div>
+                <?php
+            }
+            ?>
+        </div>
+    </div>
+    <button class="button save" type="submit"><?php esc_html_e('Save', 'woocommerce'); ?></button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    var userRolesSelect = document.getElementById('user_roles');
+    var roleFieldsContainers = document.querySelectorAll('.role-fields');
+
+    // Hide role fields initially
+    roleFieldsContainers.forEach(function(container) {
+        container.style.display = 'none';
+    });
+
+    userRolesSelect.addEventListener('change', function() {
+        var selectedRoles = this.selectedOptions;
+
+        roleFieldsContainers.forEach(function(container) {
+            container.style.display = 'none';
+        });
+
+        for (var i = 0; i < selectedRoles.length; i++) {
+            var selectedRole = selectedRoles[i].value;
+            var roleFieldsContainer = document.querySelector('.role-fields.' + selectedRole);
+            if (roleFieldsContainer) {
+                roleFieldsContainer.style.display = 'block';
+            }
+        }
+    });
+});
+    </script>
+    <?php
+}
+
  
 // Save simple product user role fields data
 add_action('woocommerce_process_product_meta_simple', 'save_simple_product_user_roles_data');
@@ -151,6 +160,37 @@ function custom_display_quantity_fields_on_single_product() {
         <?php
     }
 }
+
+//hides previous quantity inputs
+add_action('woocommerce_product_options_general_product_data', 'hide_quantity_rules_fields');
+function hide_quantity_rules_fields() {
+    ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Select the elements to hide
+            var minimumQuantityField = document.querySelector('.minimum_allowed_quantity_field');
+            var maximumQuantityField = document.querySelector('.maximum_allowed_quantity_field');
+            var groupOfQuantityField = document.querySelector('.group_of_quantity_field');
+            var allowCombinationField = document.querySelector('.allow_combination_field');
+
+            // Hide the elements
+            if (minimumQuantityField) {
+                minimumQuantityField.style.display = 'none';
+            }
+            if (maximumQuantityField) {
+                maximumQuantityField.style.display = 'none';
+            }
+            if (groupOfQuantityField) {
+                groupOfQuantityField.style.display = 'none';
+            }
+            if (allowCombinationField) {
+                allowCombinationField.style.display = 'none';
+            }
+        });
+    </script>
+    <?php
+}
+
 
 //////////// VARIABLE PRODUCTS ////////////
 
