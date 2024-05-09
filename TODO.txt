@@ -1,6 +1,11 @@
-save --- gravar preços etc. como update
-produto variavel --- abrir vários select box
+save --- gravar preços etc. como update // done
 
-select 2 multiselect
 
-abrir automaticamente os que tem min. quantidade definido
+produto variavel --- abrir vários select box // done-simple_products ; done-variation_products
+
+
+ 
+select 2 multiselect // done-simple_products ; done-variation_products
+
+
+abrir automaticamente os que tem min. quantidade definido // done-simple_products

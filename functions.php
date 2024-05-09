@@ -206,6 +206,7 @@ function hide_quantity_rules_fields() {
 }
 
 //////////// VARIABLE PRODUCTS ////////////
+
 // Add JavaScript function to handle user role fields dynamically
 add_action('admin_footer', 'add_custom_js_script');
 function add_custom_js_script() {
@@ -255,6 +256,7 @@ function showUserRoleFields(select, variationId) {
     <?php
 }
 
+
 add_action('woocommerce_variation_options_pricing', 'generate_variation_user_roles_select_box', 10, 3);
 function generate_variation_user_roles_select_box($loop, $variation_data, $variation) {
     $all_roles = get_editable_roles();
@@ -284,16 +286,27 @@ function generate_variation_user_roles_select_box($loop, $variation_data, $varia
             <div id="user_role_fields_<?php echo $variation->ID; ?>" class="user-role-fields-container"></div>
         </div>
         <script>
-            jQuery(document).ready(function($) {
-                $('#user_roles_<?php echo $variation->ID; ?>').select2();
-            });
+         jQuery(document).ready(function($) {
+    var selectElement = $('#user_roles_<?php echo $variation->ID; ?>');
+    selectElement.select2();
+
+    selectElement.find('option').each(function() {
+        var optionElement = $(this);
+        var minQty = optionElement.data('min-quantity');
+
+        if (minQty) {
+            optionElement.prop('selected', true);
+            selectElement.trigger('change');
+        }
+    });
+});
+
         </script>
         <?php
     } else {
         echo 'No user roles found.';
     }
-}
-
+}  
 
 // Save variation user role fields data
 add_action('woocommerce_save_product_variation', 'save_variation_user_roles_data', 20, 2);
