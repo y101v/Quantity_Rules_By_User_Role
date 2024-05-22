@@ -1,28 +1,57 @@
-# Storefront Child Theme
+# WooCommerce User Role Based Quantity Rules
 
-The StoreFront Child Theme is a starter blank child theme for WooThemes StoreFront WooCommerce theme.
+This theme customizes WooCommerce to allow setting minimum, maximum, and group quantity rules based on user roles. It integrates seamlessly with the WooCommerce Min/Max Quantities plugin.
+
+## Features
+
+- Define custom quantity rules for WooCommerce products based on user roles.
+- Support for both simple and variable products.
+- Enhanced select box functionality in the admin panel using Select2.
+- Automatically hides default WooCommerce quantity fields to avoid conflicts.
+
+## Requirements
+
+- WordPress
+- WooCommerce
+- WooCommerce Min/Max Quantities plugin
 
 ## Installation
 
-1. Download the child theme from it's GitHub Repository [Download StoreFront Blank Child Theme](https://github.com/stuartduff/storefront-child-theme).
-2. Goto WordPress > Appearance > Themes > Add New.
-2. Click Upload Theme and Choose File, then select the theme's .zip file. Click Install Now.
-3. Click Activate to use your new theme right away.
+1. **Theme Installation**:
+    - Upload the theme to your WordPress installation.
+    - Activate the theme through the 'Themes' menu in WordPress.
+
+2. **Plugin Installation**:
+    - Install and activate the WooCommerce plugin.
+    - Install and activate the WooCommerce Min/Max Quantities plugin.
 
 ## Usage
 
-This child theme is designed to be used as a starter theme for the WooCommerce StoreFront theme which you can download for free below.
+### For Simple Products
 
-* [Download WooCommerce StoreFront Theme](https://wordpress.org/themes/storefront/)
-* [StoreFront Documentation](http://docs.woocommerce.com/documentation/themes/storefront/)
-* [StoreFront Child Themes](https://woocommerce.com/product-category/themes/storefront-child-theme-themes/)
-* [StoreFront Extensions](https://woocommerce.com/product-category/storefront-extensions/)
+1. **Admin Settings**:
+    - Go to the product edit page in the WordPress admin.
+    - In the "General" tab, you will find the "User Roles" multi-select dropdown.
+    - Select the user roles you want to apply quantity rules to.
+    - For each selected role, set the minimum quantity, maximum quantity, and group of quantity fields.
 
-Custom PHP that you write should be added to the child themes functions.php file whilst any custom CSS should be added to the child themes style.css file.
+2. **Frontend**:
+    - When a user with a specific role views a product, the quantity input field will be adjusted based on the defined rules.
 
-There is also a style.scss file within the /assets/sass/ folder that can be used if you wish to write [SASS - Syntactically Awesome Style Sheets](http://sass-lang.com/) based styles which can then be compiled into the style.css file using an app like [CodeKit](https://incident57.com/codekit/) for OSX or [PrePros](https://prepros.io/) for Windows.
+### For Variable Products
 
-The blank child theme itself has no functionality and if you would like to learn more about child themes for WordPress see this documentation below.
+1. **Admin Settings**:
+    - Go to the product edit page and select the "Variations" tab.
+    - For each variation, you will find the "User Roles" multi-select dropdown.
+    - Select the user roles you want to apply quantity rules to.
+    - For each selected role, set the minimum quantity, maximum quantity, and group of quantity fields.
 
-* [WordPress Child Themes](https://codex.wordpress.org/Child_Themes)
+2. **Frontend**:
+    - When a user with a specific role views a product variation, the quantity input field will be adjusted based on the defined rules.
+
+## Customization
+
+### Enqueue Select2
+
+The theme enqueues the Select2 library for enhanced select box functionality in the admin panel.
 
