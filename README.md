@@ -7,7 +7,7 @@ This theme customizes WooCommerce to allow setting minimum, maximum, and group q
 - Define custom quantity rules for WooCommerce products based on user roles.
 - Support for both simple and variable products.
 - Enhanced select box functionality in the admin panel using Select2.
-- Automatically hides default WooCommerce quantity fields to avoid conflicts.
+  
 
 ## Requirements
 
