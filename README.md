@@ -13,7 +13,7 @@ This theme customizes WooCommerce to allow setting minimum, maximum, and group q
 
 - WordPress
 - WooCommerce
-- WooCommerce Min/Max Quantities plugin
+- WooCommerce Min/Max Quantities Pro plugin
 
 ## Installation
 
