@@ -1,6 +1,6 @@
 # WooCommerce User Role Based Quantity Rules
 
-This theme customizes WooCommerce to allow setting minimum, maximum, and group quantity rules based on user roles. It integrates seamlessly with the WooCommerce Min/Max Quantities plugin.
+This plugin customizes WooCommerce to allow setting minimum, maximum, and group quantity rules based on user roles. It integrates seamlessly with the WooCommerce Min/Max Quantities plugin.
 
 ## Features
 
@@ -17,11 +17,7 @@ This theme customizes WooCommerce to allow setting minimum, maximum, and group q
 
 ## Installation
 
-1. **Theme Installation**:
-    - Upload the theme to your WordPress installation.
-    - Activate the theme through the 'Themes' menu in WordPress.
-
-2. **Plugin Installation**:
+1. **Plugin Installation**:
     - Install and activate the WooCommerce plugin.
     - Install and activate the WooCommerce Min/Max Quantities plugin.
 
@@ -48,10 +44,4 @@ This theme customizes WooCommerce to allow setting minimum, maximum, and group q
 
 2. **Frontend**:
     - When a user with a specific role views a product variation, the quantity input field will be adjusted based on the defined rules.
-
-## Customization
-
-### Enqueue Select2
-
-The theme enqueues the Select2 library for enhanced select box functionality in the admin panel.
-
+      
